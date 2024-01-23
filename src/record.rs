@@ -1,7 +1,7 @@
-use crate::reader;
+use crate::buffer;
 
 // represents the type of a record
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum RType {
     UNKNOWN(u16),
     A,
@@ -24,7 +24,7 @@ impl RType {
 }
 
 // represents the class of a record
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum RClass {
     IN,
     SOMETHING(u16),
@@ -63,10 +63,10 @@ pub enum RecordType {
 }
 
 impl Record {
-    pub fn from_buf(buf: &mut reader::DnsBuffer, record_type: RecordType) -> anyhow::Result<Record> {
+    pub fn from_buf(buf: &mut buffer::DnsBuffer, record_type: RecordType) -> anyhow::Result<Record> {
         match record_type {
             RecordType::QUESTION => Ok(Record {
-                domain: buf.get_name_from_request()?,
+                domain: buf.get_domain()?,
                 rtype: RType::from_num(buf.read_u16()?),
                 rclass: RClass::from_num(buf.read_u16()?),
                 ttl: None,
@@ -74,18 +74,26 @@ impl Record {
                 data: None
             }),
             RecordType::OTHER => {
-                let domain = buf.get_name_from_request()?;
+                let domain = buf.get_domain()?;
                 let rtype = RType::from_num(buf.read_u16()?);
                 let rclass = RClass::from_num(buf.read_u16()?);
                 let ttl = buf.read_u32()?;
                 let data_len = buf.read_u16()?;
                 // let data = String::from_utf8_lossy(buf.get_range(buf.pos, data_len as usize)?);
-                let raw_addr = buf.read_u32()?;
-                let a = ((raw_addr >> 24) & 0xFF) as u8;
-                let b = ((raw_addr >> 16) & 0xFF) as u8;
-                let c = ((raw_addr >> 8) & 0xFF) as u8;
-                let d = ((raw_addr >> 0) & 0xFF) as u8;
-                let data = format!("{}.{}.{}.{}", a, b, c, d);
+
+                let data = match rtype {
+                    RType::A => {
+                        let raw_addr = buf.read_u32()?;
+                        let a = ((raw_addr >> 24) & 0xFF) as u8;
+                        let b = ((raw_addr >> 16) & 0xFF) as u8;
+                        let c = ((raw_addr >> 8) & 0xFF) as u8;
+                        let d = ((raw_addr >> 0) & 0xFF) as u8;
+                        format!("{}.{}.{}.{}", a, b, c, d)
+                    }
+                    RType::UNKNOWN(_)=> {
+                        return Err(anyhow::anyhow!("parsing record error: unsuported RTYPE"));
+                    }
+                };
             
                 Ok(Record {
                     domain,

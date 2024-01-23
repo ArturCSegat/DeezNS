@@ -1,6 +1,6 @@
-use crate::{header::DnsHeader, record::{Record, RecordType}, reader::DnsBuffer};
+use crate::{header::DnsHeader, record::{Record, RecordType}, buffer::DnsBuffer};
 
-#[allow(dead_code)]
+#[derive(Debug)]
 pub struct DnsPacket {
     pub header: DnsHeader,
     pub questions: Vec<Record>,

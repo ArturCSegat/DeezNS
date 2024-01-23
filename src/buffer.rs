@@ -1,4 +1,7 @@
 use anyhow;
+use crate::record::Record;
+
+#[derive(Debug)]
 pub struct DnsBuffer {
     pub buf: [u8; 512],
     pub pos: usize,
@@ -63,8 +66,37 @@ impl DnsBuffer {
         Ok(res)
     }
 
+    pub fn write(&mut self, byte: u8) -> anyhow::Result<()> {
+        if self.pos >= 512 {
+            return Err(anyhow::anyhow!("write error: end of buffer"))
+        }
+        self.buf[self.pos] = byte;
+        self.pos += 1;
+        Ok(())
+    }
+
+    pub fn write_u16(&mut self, byte: u16) -> anyhow::Result<()> {
+        if self.pos >= 512 {
+            return Err(anyhow::anyhow!("write_u16 error: end of buffer"))
+        }
+        self.write((byte >> 8) as u8)?;
+        self.write((byte & 0xFF) as u8)?;
+        Ok(())
+    }
+    pub fn write_u32(&mut self, byte: u32) -> anyhow::Result<()> {
+        if self.pos >= 512 {
+            return Err(anyhow::anyhow!("write_u32 error: end of buffer"))
+        }
+        // most of the 0xFF are for the pretty, think the first and secnd are necessary
+        self.write(((byte >> 24) & 0xFF) as u8)?;
+        self.write(((byte >> 16) & 0xFF) as u8)?;
+        self.write(((byte >> 8) & 0xFF) as u8)?;
+        self.write(((byte >> 0) & 0xFF) as u8)?;
+        Ok(())
+    }
+
     #[allow(unused_variables, unused_mut)]
-    pub fn get_name_from_request(&mut self) -> anyhow::Result<String> {
+    pub fn get_domain(&mut self) -> anyhow::Result<String> {
         let mut local_pos = self.pos;
 
         // preventing jump looping
@@ -119,6 +151,42 @@ impl DnsBuffer {
             }
         }
         Ok(domain_buffer)
+    }
+
+
+    pub fn write_record(&mut self, rec: &Record) -> anyhow::Result<()> {
+        // write domain, 
+        for label in rec.domain.split('.') {
+            let len = label.len();
+            if len > 63 {
+                return Err(anyhow::anyhow!("write_record error: exceeded max label lenght of 63"))
+            }
+            self.write(len as u8)?;
+            for byte in label.as_bytes() {
+                self.write(*byte)?;
+            }
+        }
+        self.write(0)?;
+        // write type,
+        self.write_u16(rec.rtype.to_num())?;
+        // write class
+        self.write_u16(rec.rclass.to_num())?;
+        // write ttl,
+        if let Some(ttl) = rec.ttl {
+            self.write_u32(ttl)?;
+        }
+        // write data len
+        if let Some(dlen) = rec.data_len {
+            self.write_u16(dlen)?;
+        }
+        // write data
+        if let Some(data) = &rec.data {
+            for oct in data.split('.') {
+                self.write(oct.parse()?)?;
+            }
+        }
+
+        Ok(())
     }
 
 }
