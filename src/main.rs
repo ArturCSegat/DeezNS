@@ -1,7 +1,7 @@
 use std::net::UdpSocket;
 use deez_ns::buffer::DnsBuffer;
 use deez_ns::packet::DnsPacket;
-use deez_ns::record::{Record, RType, RClass};
+use deez_ns::record::{DnsRecord, RType, RClass};
 
 fn main() {
     let server = ("8.8.8.8", 53);
@@ -11,9 +11,9 @@ fn main() {
     q_pack.header.questions = 1;
     q_pack.header.id = 6969;
     q_pack.questions.push(
-        Record{
+        DnsRecord{
             domain: "google.com".to_owned(),
-            rtype: RType::A,
+            rtype: RType::NS,
             rclass: RClass::IN,
             ttl: None,
             data_len: None,

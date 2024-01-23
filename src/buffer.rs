@@ -1,5 +1,5 @@
 use anyhow;
-use crate::record::Record;
+use crate::record::DnsRecord;
 
 #[derive(Debug)]
 pub struct DnsBuffer {
@@ -98,6 +98,7 @@ impl DnsBuffer {
     #[allow(unused_variables, unused_mut)]
     pub fn get_domain(&mut self) -> anyhow::Result<String> {
         let mut local_pos = self.pos;
+        println!("localpos: {}, real: {}", local_pos, self.pos);
 
         // preventing jump looping
         let max_jumps = 5;
@@ -150,11 +151,12 @@ impl DnsBuffer {
                 self.seek(local_pos + 1)?;
             }
         }
+        println!("localpos: {}, real: {}, domain: {}", local_pos, self.pos, &domain_buffer);
         Ok(domain_buffer)
     }
 
 
-    pub fn write_record(&mut self, rec: &Record) -> anyhow::Result<()> {
+    pub fn write_record(&mut self, rec: &DnsRecord) -> anyhow::Result<()> {
         // write domain, 
         for label in rec.domain.split('.') {
             let len = label.len();

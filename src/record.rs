@@ -1,3 +1,4 @@
+use core::panic;
 use crate::buffer;
 
 // represents the type of a record
@@ -5,12 +6,14 @@ use crate::buffer;
 pub enum RType {
     UNKNOWN(u16),
     A,
+    NS,
 }
 
 impl RType {
     pub fn from_num(num: u16) -> RType {
         match num {
             1 => Self::A,
+            2 => Self::NS,
             _ => Self::UNKNOWN(num)
         }
     }
@@ -18,6 +21,7 @@ impl RType {
     pub fn to_num(&self) -> u16 {
         match *self {
             RType::UNKNOWN(x) => x,
+            RType::NS => 2,
             RType::A => 1,
         }
     }
@@ -48,7 +52,7 @@ impl RClass {
 
 #[allow(dead_code)]
 #[derive(Debug)]
-pub struct Record {
+pub struct DnsRecord {
     pub domain: String,
     pub rtype: RType,
     pub rclass: RClass,
@@ -62,10 +66,10 @@ pub enum RecordType {
     OTHER,
 }
 
-impl Record {
-    pub fn from_buf(buf: &mut buffer::DnsBuffer, record_type: RecordType) -> anyhow::Result<Record> {
+impl DnsRecord {
+    pub fn from_buf(buf: &mut buffer::DnsBuffer, record_type: RecordType) -> anyhow::Result<DnsRecord> {
         match record_type {
-            RecordType::QUESTION => Ok(Record {
+            RecordType::QUESTION => Ok(DnsRecord {
                 domain: buf.get_domain()?,
                 rtype: RType::from_num(buf.read_u16()?),
                 rclass: RClass::from_num(buf.read_u16()?),
@@ -90,12 +94,15 @@ impl Record {
                         let d = ((raw_addr >> 0) & 0xFF) as u8;
                         format!("{}.{}.{}.{}", a, b, c, d)
                     }
+                    RType::NS => {
+                        buf.get_domain()?
+                        }
                     RType::UNKNOWN(_)=> {
-                        return Err(anyhow::anyhow!("parsing record error: unsuported RTYPE"));
+                        "cant read data, unknown rtype".to_owned()
                     }
                 };
             
-                Ok(Record {
+                Ok(DnsRecord {
                     domain,
                     rtype,
                     rclass,

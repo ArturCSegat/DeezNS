@@ -1,12 +1,12 @@
-use crate::{header::DnsHeader, record::{Record, RecordType}, buffer::DnsBuffer};
+use crate::{header::DnsHeader, record::{DnsRecord, RecordType}, buffer::DnsBuffer};
 
 #[derive(Debug)]
 pub struct DnsPacket {
     pub header: DnsHeader,
-    pub questions: Vec<Record>,
-    pub answers: Vec<Record>,
-    pub authorities: Vec<Record>,
-    pub resources: Vec<Record>,
+    pub questions: Vec<DnsRecord>,
+    pub answers: Vec<DnsRecord>,
+    pub authorities: Vec<DnsRecord>,
+    pub resources: Vec<DnsRecord>,
 }
 
 impl DnsPacket {
@@ -27,16 +27,19 @@ impl DnsPacket {
         dns_p.header.read(buf)?;
 
         for _ in 0..dns_p.header.questions {
-            dns_p.questions.push(Record::from_buf(buf, RecordType::QUESTION)?);
+            dns_p.questions.push(DnsRecord::from_buf(buf, RecordType::QUESTION)?);
         }
         for _ in 0..dns_p.header.answers {
-            dns_p.answers.push(Record::from_buf(buf, RecordType::OTHER)?);
+            let a = DnsRecord::from_buf(buf, RecordType::OTHER)?;
+            println!("{:?}", a);
+            dns_p.answers.push(a);
+            
         }
         for _ in 0..dns_p.header.authoritative_entries {
-            dns_p.authorities.push(Record::from_buf(buf, RecordType::OTHER)?);
+            dns_p.authorities.push(DnsRecord::from_buf(buf, RecordType::OTHER)?);
         }
         for _ in 0..dns_p.header.resource_entries {
-            dns_p.questions.push(Record::from_buf(buf, RecordType::OTHER)?);
+            dns_p.questions.push(DnsRecord::from_buf(buf, RecordType::OTHER)?);
         }
 
         Ok(dns_p)
