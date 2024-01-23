@@ -63,7 +63,7 @@ pub enum RecordType {
 }
 
 impl Record {
-    pub fn from_buf(buf: &mut reader::DnsReader, record_type: RecordType) -> anyhow::Result<Record> {
+    pub fn from_buf(buf: &mut reader::DnsBuffer, record_type: RecordType) -> anyhow::Result<Record> {
         match record_type {
             RecordType::QUESTION => Ok(Record {
                 domain: buf.get_name_from_request()?,

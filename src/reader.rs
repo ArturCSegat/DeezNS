@@ -1,12 +1,12 @@
 use anyhow;
-pub struct DnsReader {
+pub struct DnsBuffer {
     pub buf: [u8; 512],
     pub pos: usize,
 }
 
-impl DnsReader {
-    pub fn new() -> DnsReader {
-        DnsReader {
+impl DnsBuffer {
+    pub fn new() -> DnsBuffer {
+        DnsBuffer {
             buf: [0; 512],
             pos: 0,
         }

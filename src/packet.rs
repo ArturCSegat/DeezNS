@@ -1,4 +1,4 @@
-use crate::{header::DnsHeader, record::{Record, RecordType}, reader::DnsReader};
+use crate::{header::DnsHeader, record::{Record, RecordType}, reader::DnsBuffer};
 
 #[allow(dead_code)]
 pub struct DnsPacket {
@@ -20,7 +20,7 @@ impl DnsPacket {
         }
     }
 
-    pub fn from_buf(buf: &mut DnsReader) -> anyhow::Result<DnsPacket> {
+    pub fn from_buf(buf: &mut DnsBuffer) -> anyhow::Result<DnsPacket> {
         let mut dns_p = DnsPacket::new();
 
         dns_p.header = DnsHeader::new();

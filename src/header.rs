@@ -1,5 +1,5 @@
 use anyhow;
-use crate::reader::DnsReader;
+use crate::reader::DnsBuffer;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum ResultCode {
@@ -70,7 +70,7 @@ impl DnsHeader {
         }
     }
 
-    pub fn read(&mut self, buf: &mut DnsReader) -> anyhow::Result<()>{
+    pub fn read(&mut self, buf: &mut DnsBuffer) -> anyhow::Result<()>{
         self.id = buf.read_u16()?;
 
         // flags 

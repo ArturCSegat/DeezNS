@@ -1,11 +1,17 @@
-use DeezNS::reader::DnsReader;
-use DeezNS::packet::DnsPacket;
+use deez_ns::reader::DnsBuffer;
+use deez_ns::packet::DnsPacket;
 use std::fs::File;
 use std::io::Read;
 
 fn main() {
-    let mut deez = DnsReader::new();
-    let mut f = File::open("r2.txt").unwrap();
+    let args: Vec<_> = std::env::args().collect();
+    
+    if args.len() != 2 {
+        panic!("must provide exaclty 1 file to parse")
+    }
+
+    let mut deez = DnsBuffer::new();
+    let mut f = File::open(&args[1]).unwrap();
     f.read(&mut deez.buf).unwrap();
 
     let pack = DnsPacket::from_buf(&mut deez).unwrap();
