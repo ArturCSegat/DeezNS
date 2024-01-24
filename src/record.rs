@@ -5,7 +5,7 @@ use crate::buffer;
 // represents the type of a record
 #[derive(Debug, Clone)]
 pub enum RDataType {
-    UNKNOWN(Option<String>),
+    UNKNOWN(u16),
     A(Option<Ipv4Addr>),
     NS(Option<String>),
     TXT(Option<String>),
@@ -19,13 +19,13 @@ impl RDataType {
             2 => Self::NS(None),
             16 => Self::TXT(None),
             28 => Self::AAAA(None),
-            _ => Self::UNKNOWN(Some(num.to_string()))
+            _ => Self::UNKNOWN(num)
         }
     }
 
     pub fn to_num(&self) -> u16 {
         match self {
-            RDataType::UNKNOWN(x) => x.as_ref().unwrap().parse().unwrap(), // unwrap is safe because x came from to_string()
+            RDataType::UNKNOWN(x) => *x, // unwrap is safe because x came from to_string()
             RDataType::NS(_) => 2,
             RDataType::A(_) => 1,
             RDataType::AAAA(_) => 28,
@@ -35,7 +35,7 @@ impl RDataType {
 
     pub fn has_data(&self) -> bool {
         match self {
-            RDataType::UNKNOWN(op) => op.is_some(),
+            RDataType::UNKNOWN(op) => true,
             RDataType::NS(op) => op.is_some(),
             RDataType::A(op) => op.is_some(),
             RDataType::AAAA(op) => op.is_some(),
@@ -131,8 +131,8 @@ impl DnsRecord {
                     RDataType::TXT(_) => {
                         RDataType::TXT(Some(String::from_utf8_lossy(buf.get_range(buf.pos, data_len as usize)?).to_string()))
                     }
-                    RDataType::UNKNOWN(_)=> {
-                        RDataType::UNKNOWN(Some("cant read data, unknown rtype".to_owned()))
+                    RDataType::UNKNOWN(x)=> {
+                        RDataType::UNKNOWN(x)
                     }
                 };
 
@@ -161,6 +161,7 @@ impl DnsRecord {
         }
         buf.write(0)?;
         // write type,
+        println!("{:?}", self.rtype);
         buf.write_u16(self.rtype.to_num())?;
         // write class
         buf.write_u16(self.rclass.to_num())?;
@@ -204,7 +205,7 @@ impl DnsRecord {
                 buf.write(0)?;
             }
             RDataType::UNKNOWN(_) => {
-                for b in "cant read data, unknown rtype".as_bytes() {
+                for b in "could read data, unknow type".to_owned().as_bytes() {
                     buf.write(*b)?;
                 }
             }
