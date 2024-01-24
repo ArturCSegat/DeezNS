@@ -13,7 +13,7 @@ fn main() {
     q_pack.questions.push(
         DnsRecord{
             domain: "google.com".to_owned(),
-            rtype: RType::NS,
+            rtype: RType::AAAA,
             rclass: RClass::IN,
             ttl: None,
             data_len: None,
@@ -24,15 +24,25 @@ fn main() {
     let sock = UdpSocket::bind(("0.0.0.0", 3000)).unwrap();
     let mut deez1 = DnsBuffer::new();
     q_pack.header.write(&mut deez1).unwrap();
-    q_pack.questions.iter().for_each(|q| {deez1.write_record(q).unwrap()});
+    q_pack.questions.iter().for_each(|q| {q.write(&mut deez1).unwrap()});
 
     sock.send_to(&deez1.buf[0..deez1.pos], server).unwrap();
 
     let mut deez2 = DnsBuffer::new();
     sock.recv_from(&mut deez2.buf).unwrap();
 
-    let r_pack = DnsPacket::from_buf(&mut deez2);
+    let r_pack = DnsPacket::from_buf(&mut deez2).unwrap();
 
-    println!("{:#?}", r_pack);
+    // println!("{:#?}", r_pack);
+    let deez3 = &mut DnsBuffer::new();
+
+    r_pack.header.write(deez3).unwrap();
+    r_pack.questions.iter().for_each(|q| {q.write(deez3).unwrap()});
+    r_pack.answers.iter().for_each(|q| {q.write(deez3).unwrap()});
+    deez3.pos = 0;
+    let pack3 = DnsPacket::from_buf(deez3).unwrap();
+    println!("{:#?}", pack3);
+    
 }
+
 

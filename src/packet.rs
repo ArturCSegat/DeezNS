@@ -31,7 +31,7 @@ impl DnsPacket {
         }
         for _ in 0..dns_p.header.answers {
             let a = DnsRecord::from_buf(buf, RecordType::OTHER)?;
-            println!("{:?}", a);
+            // println!("{:?}", a);
             dns_p.answers.push(a);
             
         }

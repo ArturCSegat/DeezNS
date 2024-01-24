@@ -98,7 +98,6 @@ impl DnsBuffer {
     #[allow(unused_variables, unused_mut)]
     pub fn get_domain(&mut self) -> anyhow::Result<String> {
         let mut local_pos = self.pos;
-        println!("localpos: {}, real: {}", local_pos, self.pos);
 
         // preventing jump looping
         let max_jumps = 5;
@@ -151,44 +150,9 @@ impl DnsBuffer {
                 self.seek(local_pos + 1)?;
             }
         }
-        println!("localpos: {}, real: {}, domain: {}", local_pos, self.pos, &domain_buffer);
         Ok(domain_buffer)
     }
 
 
-    pub fn write_record(&mut self, rec: &DnsRecord) -> anyhow::Result<()> {
-        // write domain, 
-        for label in rec.domain.split('.') {
-            let len = label.len();
-            if len > 63 {
-                return Err(anyhow::anyhow!("write_record error: exceeded max label lenght of 63"))
-            }
-            self.write(len as u8)?;
-            for byte in label.as_bytes() {
-                self.write(*byte)?;
-            }
-        }
-        self.write(0)?;
-        // write type,
-        self.write_u16(rec.rtype.to_num())?;
-        // write class
-        self.write_u16(rec.rclass.to_num())?;
-        // write ttl,
-        if let Some(ttl) = rec.ttl {
-            self.write_u32(ttl)?;
-        }
-        // write data len
-        if let Some(dlen) = rec.data_len {
-            self.write_u16(dlen)?;
-        }
-        // write data
-        if let Some(data) = &rec.data {
-            for oct in data.split('.') {
-                self.write(oct.parse()?)?;
-            }
-        }
-
-        Ok(())
-    }
 
 }
