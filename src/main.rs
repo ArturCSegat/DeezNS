@@ -25,7 +25,8 @@ fn main() {
             pack.header.recursion_available = true;
             pack.header.write(r_buf).unwrap();
 
-            pack.questions[0].write(r_buf, &pack.domain_jumps).unwrap();
+            let fuck = HashMap::new();
+            pack.questions[0].write(r_buf, &fuck).unwrap();
             DnsRecord {
                 domain: Domain::Jump(Box::new([0xC0, *pack.domain_jumps.get(&pack.questions[0].domain.get_string(buf).unwrap()).unwrap()])),
                 rtype: data.clone(),

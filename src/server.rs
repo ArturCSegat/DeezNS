@@ -28,9 +28,8 @@ impl Server {
         let server = ("8.8.8.8", 53);
 
         let buf = &mut DnsBuffer::new();
-        // let quest_dom_jmp: HashMap<String, u8> = HashMap::new();
         pack.header.write(buf)?;
-        let fuck = HashMap::new();
+        let fuck = HashMap::new(); // empty hashmap so questions dont get jumped
         for q in pack.questions.iter() {
             q.write(buf, &fuck)?;
         }
