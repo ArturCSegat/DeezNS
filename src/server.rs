@@ -1,4 +1,6 @@
 use std::net::{UdpSocket, SocketAddr};
+use std::collections::HashMap;
+use std::process::exit;
 use anyhow;
 use crate::{buffer::DnsBuffer, packet::DnsPacket};
 
@@ -27,16 +29,17 @@ impl Server {
         let server = ("8.8.8.8", 53);
 
         let buf = &mut DnsBuffer::new();
+        // let quest_dom_jmp: HashMap<String, u8> = HashMap::new();
         pack.header.write(buf)?;
+        let fuck = HashMap::new();
         for q in pack.questions.iter() {
-            q.write(buf)?;
+            q.write(buf, &fuck)?;
         }
         
         self.sock.send_to(&buf.buf[0..buf.pos], server)?;
 
         let mut deez2 = DnsBuffer::new();
         self.sock.recv_from(&mut deez2.buf)?;
-
         Ok(DnsPacket::from_buf(&mut deez2)?)
     }
 }

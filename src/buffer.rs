@@ -126,7 +126,6 @@ impl DnsBuffer {
                 local_pos += 1;
 
                 if len == 0 {
-                    // println!("real: {}, local: {}", self.pos, local_pos);
                     break;
                 }
 

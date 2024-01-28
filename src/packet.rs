@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::{header::DnsHeader, record::{DnsRecord, RecordType}, buffer::DnsBuffer};
 
 #[derive(Debug)]
@@ -7,6 +8,7 @@ pub struct DnsPacket {
     pub answers: Vec<DnsRecord>,
     pub authorities: Vec<DnsRecord>,
     pub resources: Vec<DnsRecord>,
+    pub domain_jumps: HashMap<String, u8>, // maps a domaing to its respective offset
 }
 
 impl DnsPacket {
@@ -17,6 +19,7 @@ impl DnsPacket {
             answers: Vec::new(),
             authorities: Vec::new(),
             resources: Vec::new(),
+            domain_jumps: HashMap::new(),
         }
     }
 
@@ -27,19 +30,16 @@ impl DnsPacket {
         dns_p.header.read(buf)?;
 
         for _ in 0..dns_p.header.questions {
-            dns_p.questions.push(DnsRecord::from_buf(buf, RecordType::QUESTION)?);
+            dns_p.questions.push(DnsRecord::from_buf(buf, RecordType::QUESTION, &mut dns_p.domain_jumps)?);
         }
         for _ in 0..dns_p.header.answers {
-            let a = DnsRecord::from_buf(buf, RecordType::OTHER)?;
-            // println!("{:?}", a);
-            dns_p.answers.push(a);
-            
+            dns_p.answers.push(DnsRecord::from_buf(buf, RecordType::OTHER, &mut dns_p.domain_jumps)?);
         }
         for _ in 0..dns_p.header.authoritative_entries {
-            dns_p.authorities.push(DnsRecord::from_buf(buf, RecordType::OTHER)?);
+            dns_p.authorities.push(DnsRecord::from_buf(buf, RecordType::OTHER, &mut dns_p.domain_jumps)?);
         }
         for _ in 0..dns_p.header.resource_entries {
-            dns_p.questions.push(DnsRecord::from_buf(buf, RecordType::OTHER)?);
+            dns_p.questions.push(DnsRecord::from_buf(buf, RecordType::OTHER, &mut dns_p.domain_jumps)?);
         }
 
         Ok(dns_p)
