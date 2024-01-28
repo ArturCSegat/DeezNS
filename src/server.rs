@@ -1,6 +1,5 @@
 use std::net::{UdpSocket, SocketAddr};
 use std::collections::HashMap;
-use std::process::exit;
 use anyhow;
 use crate::{buffer::DnsBuffer, packet::DnsPacket};
 

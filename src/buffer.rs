@@ -1,5 +1,4 @@
 use anyhow;
-use crate::record::DnsRecord;
 
 #[derive(Debug)]
 pub struct DnsBuffer {

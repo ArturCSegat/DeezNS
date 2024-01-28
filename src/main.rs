@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::net::Ipv4Addr;
 use std::str::FromStr;
-use std::process::exit;
 use deez_ns::buffer::DnsBuffer;
 use deez_ns::header::ResultCode;
 use deez_ns::record::{DnsRecord, RDataType, RClass, Domain};
@@ -17,7 +16,6 @@ fn main() {
     loop {
         let buf = &mut DnsBuffer::new();
         let (mut pack, from) = server.get_query(buf).unwrap();
-        // println!("{:#?}", pack);
 
         let r_buf = &mut DnsBuffer::new();
         if let Some(data) =  cache.get(&pack.questions[0].domain.get_string(buf).unwrap()) {
